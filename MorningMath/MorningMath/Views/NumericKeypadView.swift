@@ -22,9 +22,11 @@ struct NumericKeypadView: View {
                 }
             }
         }
-        .padding(14)
+        .padding(.horizontal, 14)
+        .padding(.top, 14)
+        .padding(.bottom, 28)
         .background(AppTheme.panel)
-        .clipShape(RoundedRectangle(cornerRadius: 20, style: .continuous))
+        .clipShape(RoundedRectangle(cornerRadius: 44, style: .continuous))
     }
 
     private func digitButton(_ digit: String) -> some View {

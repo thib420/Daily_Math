@@ -9,7 +9,7 @@ struct QuizView: View {
     let onEnter: () -> Void
 
     var body: some View {
-        VStack(spacing: 14) {
+        VStack(spacing: 10) {
             VStack(spacing: 18) {
                 HStack {
                     Button(action: onBack) {
