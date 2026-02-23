@@ -5,9 +5,7 @@ struct ContentView: View {
 
     var body: some View {
         Group {
-            if viewModel.showCompletionScreen {
-                CompletionView(onReset: viewModel.resetProgress)
-            } else if let session = viewModel.activeSession {
+            if let session = viewModel.activeSession {
                 QuizView(
                     session: session,
                     onBack: viewModel.exitSession,
@@ -18,7 +16,6 @@ struct ContentView: View {
                 )
             } else {
                 DayGridView(
-                    nextUnlockText: viewModel.nextUnlockText(),
                     statusForDay: viewModel.status,
                     onSelectDay: viewModel.startDay
                 )

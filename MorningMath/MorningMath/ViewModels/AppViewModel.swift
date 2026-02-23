@@ -7,7 +7,6 @@ final class AppViewModel: ObservableObject {
         case completed
         case available
         case locked
-        case lockedUntilTomorrow
     }
 
     struct Feedback: Equatable {
@@ -75,10 +74,6 @@ final class AppViewModel: ObservableObject {
         accessPolicy.nextDayToPlay(progress: progress)
     }
 
-    var isLockedForToday: Bool {
-        accessPolicy.isLockedForToday(progress: progress, now: nowProvider())
-    }
-
     func status(for day: Int) -> DayStatus {
         if progress.completedDays.contains(day) {
             return .completed
@@ -92,40 +87,40 @@ final class AppViewModel: ObservableObject {
             return .locked
         }
 
-        if isLockedForToday {
-            return .lockedUntilTomorrow
-        }
-
         return .available
     }
 
-    func nextUnlockText() -> String? {
-        guard let date = accessPolicy.nextUnlockDate(progress: progress, now: nowProvider()) else {
-            return nil
-        }
-
-        let formatter = DateFormatter()
-        formatter.timeStyle = .short
-        formatter.dateStyle = .medium
-        return "Next level unlocks on \(formatter.string(from: date))."
-    }
-
     func startDay(_ day: Int) {
-        guard accessPolicy.canStart(day: day, progress: progress, now: nowProvider()) else {
+        guard accessPolicy.canStart(day: day, progress: progress) else {
             return
         }
 
         let questions = generator.questions(for: day, anchorDate: progress.startedAt)
+        let isReplay = progress.completedDays.contains(day)
+        let restoredIndex = progress.inProgressDay == day ? progress.inProgressQuestionIndex : 0
+        let startIndex = isReplay ? 0 : min(restoredIndex, max(questions.count - 1, 0))
+
         activeSession = QuizSession(
             day: day,
             level: DailyLevel(dayNumber: day, questions: questions),
-            currentQuestionIndex: 0,
+            currentQuestionIndex: startIndex,
             currentInput: "",
             feedback: nil
         )
+
+        if !isReplay {
+            progress.inProgressDay = day
+            progress.inProgressQuestionIndex = startIndex
+            store.save(progress)
+        }
     }
 
     func exitSession() {
+        if let session = activeSession, !progress.completedDays.contains(session.day) {
+            progress.inProgressDay = session.day
+            progress.inProgressQuestionIndex = session.currentQuestionIndex
+            store.save(progress)
+        }
         activeSession = nil
     }
 
@@ -192,6 +187,9 @@ final class AppViewModel: ObservableObject {
             session.currentInput = ""
             session.feedback = nil
             activeSession = session
+            progress.inProgressDay = session.day
+            progress.inProgressQuestionIndex = session.currentQuestionIndex
+            store.save(progress)
             return
         }
 
@@ -210,6 +208,10 @@ final class AppViewModel: ObservableObject {
     private func completeDay(day: Int) {
         progress.completedDays.insert(day)
         progress.lastCompletionDayStart = calendar.startOfDay(for: nowProvider())
+        if progress.inProgressDay == day {
+            progress.inProgressDay = nil
+            progress.inProgressQuestionIndex = 0
+        }
         store.save(progress)
         activeSession = nil
     }
