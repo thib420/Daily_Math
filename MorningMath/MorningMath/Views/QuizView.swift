@@ -10,34 +10,33 @@ struct QuizView: View {
 
     var body: some View {
         VStack(spacing: 14) {
-            HStack {
-                Button(action: onBack) {
-                    Image(systemName: "chevron.left")
-                        .font(.system(size: 22, weight: .bold))
-                        .foregroundStyle(AppTheme.textPrimary)
-                        .frame(width: 50, height: 50)
-                        .background(AppTheme.panel)
-                        .clipShape(RoundedRectangle(cornerRadius: 14, style: .continuous))
-                }
-
-                Spacer()
-
-                Text("Day \(session.day)")
-                    .font(.system(size: 20, weight: .bold, design: .rounded))
-                    .foregroundStyle(AppTheme.textPrimary)
-                    .padding(.horizontal, 20)
-                    .padding(.vertical, 10)
-                    .background(AppTheme.panel)
-                    .clipShape(Capsule())
-            }
-            .padding(.horizontal, 20)
-            .padding(.top, 8)
-
             VStack(spacing: 18) {
-                Text("\(session.currentQuestionIndex + 1)/\(session.level.questions.count)")
-                    .font(.system(size: 22, weight: .bold, design: .rounded))
-                    .foregroundStyle(AppTheme.textSecondary)
-                    .frame(maxWidth: .infinity, alignment: .leading)
+                HStack {
+                    Button(action: onBack) {
+                        Image(systemName: "chevron.left")
+                            .font(.system(size: 22, weight: .bold))
+                            .foregroundStyle(AppTheme.textPrimary)
+                            .frame(width: 50, height: 50)
+                            .background(AppTheme.panelLight)
+                            .clipShape(RoundedRectangle(cornerRadius: 14, style: .continuous))
+                    }
+
+                    Spacer()
+
+                    Text("\(session.currentQuestionIndex + 1)/\(session.level.questions.count)")
+                        .font(.system(size: 20, weight: .bold, design: .rounded))
+                        .foregroundStyle(AppTheme.textPrimary)
+
+                    Spacer()
+
+                    Text("Day \(session.day)")
+                        .font(.system(size: 20, weight: .bold, design: .rounded))
+                        .foregroundStyle(AppTheme.textPrimary)
+                        .padding(.horizontal, 20)
+                        .padding(.vertical, 10)
+                        .background(AppTheme.panelLight)
+                        .clipShape(Capsule())
+                }
 
                 Spacer(minLength: 8)
 
@@ -66,11 +65,12 @@ struct QuizView: View {
 
                 Spacer()
             }
-            .padding(24)
+            .padding(20)
             .frame(maxWidth: .infinity, minHeight: 360)
             .background(AppTheme.panel)
             .clipShape(RoundedRectangle(cornerRadius: 28, style: .continuous))
             .padding(.horizontal, 14)
+            .padding(.top, 8)
 
             NumericKeypadView(
                 onDigit: onDigit,
@@ -78,8 +78,6 @@ struct QuizView: View {
                 onClear: onClear,
                 onEnter: onEnter
             )
-            .padding(.horizontal, 14)
-            .padding(.bottom, 10)
         }
     }
 }
