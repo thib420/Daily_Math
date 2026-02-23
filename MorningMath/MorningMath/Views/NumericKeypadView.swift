@@ -14,18 +14,12 @@ struct NumericKeypadView: View {
                 actionButton("Enter", action: onEnter)
             }
 
-            ForEach([["1", "2", "3"], ["4", "5", "6"], ["7", "8", "9"]], id: \.self) { row in
-                HStack(spacing: 10) {
+            ForEach([["1", "2", "3", "4", "5"], ["6", "7", "8", "9", "0"]], id: \.self) { row in
+                HStack(spacing: 8) {
                     ForEach(row, id: \.self) { digit in
                         digitButton(digit)
                     }
                 }
-            }
-
-            HStack(spacing: 10) {
-                Spacer()
-                digitButton("0")
-                Spacer()
             }
         }
         .padding(14)
