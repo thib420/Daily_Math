@@ -5,6 +5,7 @@ struct NumericKeypadView: View {
     let onBackspace: () -> Void
     let onClear: () -> Void
     let onEnter: () -> Void
+    var cornerRadius: CGFloat = 28
 
     var body: some View {
         VStack(spacing: 10) {
@@ -24,7 +25,7 @@ struct NumericKeypadView: View {
         }
         .padding(14)
         .background(AppTheme.panel)
-        .clipShape(RoundedRectangle(cornerRadius: 28, style: .continuous))
+        .clipShape(RoundedRectangle(cornerRadius: cornerRadius, style: .continuous))
     }
 
     private func digitButton(_ digit: String) -> some View {
