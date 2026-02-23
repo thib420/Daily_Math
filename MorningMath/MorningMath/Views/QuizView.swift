@@ -33,14 +33,11 @@ struct QuizView: View {
             .padding(.horizontal, 20)
             .padding(.top, 8)
 
-            VStack(alignment: .leading, spacing: 18) {
-                Text(session.currentQuestion.kind.title)
+            VStack(spacing: 18) {
+                Text("\(session.currentQuestionIndex + 1)/\(session.level.questions.count)")
                     .font(.system(size: 22, weight: .bold, design: .rounded))
                     .foregroundStyle(AppTheme.textSecondary)
-
-                Text(session.progressText)
-                    .font(.system(size: 17, weight: .semibold, design: .rounded))
-                    .foregroundStyle(AppTheme.textSecondary)
+                    .frame(maxWidth: .infinity, alignment: .leading)
 
                 Spacer(minLength: 8)
 
@@ -49,14 +46,17 @@ struct QuizView: View {
                     .foregroundStyle(AppTheme.textPrimary)
                     .minimumScaleFactor(0.65)
                     .lineLimit(3)
-                    .multilineTextAlignment(.leading)
+                    .multilineTextAlignment(.center)
                     .fixedSize(horizontal: false, vertical: true)
+                    .frame(maxWidth: .infinity)
 
-                Text(session.currentInput.isEmpty ? "_" : session.currentInput)
+                Text(session.currentInput.isEmpty ? "" : session.currentInput)
                     .font(.system(size: 52, weight: .heavy, design: .rounded))
                     .foregroundStyle(AppTheme.textPrimary)
                     .monospacedDigit()
                     .lineLimit(1)
+                    .frame(maxWidth: .infinity)
+                    .frame(minHeight: 62)
 
                 if let feedback = session.feedback {
                     Text(feedback.message)
