@@ -79,7 +79,6 @@ struct QuizView: View {
                 onEnter: onEnter
             )
             .padding(.horizontal, 14)
-            .padding(.bottom, 14)
         }
     }
 }
