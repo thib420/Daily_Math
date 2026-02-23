@@ -11,31 +11,31 @@ struct QuizView: View {
     var body: some View {
         VStack(spacing: 10) {
             VStack(spacing: 18) {
-                HStack {
-                    Button(action: onBack) {
-                        Image(systemName: "chevron.left")
-                            .font(.system(size: 22, weight: .bold))
-                            .foregroundStyle(AppTheme.textPrimary)
-                            .frame(width: 50, height: 50)
-                            .background(AppTheme.panelLight)
-                            .clipShape(RoundedRectangle(cornerRadius: 14, style: .continuous))
-                    }
-
-                    Spacer()
-
+                ZStack {
                     Text("\(session.currentQuestionIndex + 1)/\(session.level.questions.count)")
                         .font(.system(size: 20, weight: .bold, design: .rounded))
                         .foregroundStyle(AppTheme.textPrimary)
 
-                    Spacer()
+                    HStack {
+                        Button(action: onBack) {
+                            Image(systemName: "chevron.left")
+                                .font(.system(size: 22, weight: .bold))
+                                .foregroundStyle(AppTheme.textPrimary)
+                                .frame(width: 50, height: 50)
+                                .background(AppTheme.panelLight)
+                                .clipShape(RoundedRectangle(cornerRadius: 14, style: .continuous))
+                        }
 
-                    Text("Day \(session.day)")
-                        .font(.system(size: 20, weight: .bold, design: .rounded))
-                        .foregroundStyle(AppTheme.textPrimary)
-                        .padding(.horizontal, 20)
-                        .padding(.vertical, 10)
-                        .background(AppTheme.panelLight)
-                        .clipShape(Capsule())
+                        Spacer()
+
+                        Text("Day \(session.day)")
+                            .font(.system(size: 20, weight: .bold, design: .rounded))
+                            .foregroundStyle(AppTheme.textPrimary)
+                            .padding(.horizontal, 20)
+                            .padding(.vertical, 10)
+                            .background(AppTheme.panelLight)
+                            .clipShape(Capsule())
+                    }
                 }
 
                 Spacer(minLength: 8)
@@ -78,6 +78,8 @@ struct QuizView: View {
                 onClear: onClear,
                 onEnter: onEnter
             )
+            .padding(.horizontal, 14)
+            .padding(.bottom, 14)
         }
     }
 }
