@@ -12,11 +12,13 @@ struct ContentView: View {
                     onDigit: viewModel.appendDigit,
                     onBackspace: viewModel.backspace,
                     onClear: viewModel.clearInput,
-                    onEnter: viewModel.submitInput
+                    onEnter: viewModel.submitInput,
+                    elapsedTime: viewModel.sessionElapsedTime
                 )
             } else {
                 DayGridView(
                     statusForDay: viewModel.status,
+                    savedTimeForDay: viewModel.savedTime,
                     onSelectDay: viewModel.startDay
                 )
             }

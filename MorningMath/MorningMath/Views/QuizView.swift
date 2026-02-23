@@ -20,6 +20,7 @@ struct QuizView: View {
     let onBackspace: () -> Void
     let onClear: () -> Void
     let onEnter: () -> Void
+    let elapsedTime: TimeInterval
 
     @State private var showSuccessAnimation = false
     @State private var successBurstProgress: CGFloat = 0
@@ -41,9 +42,19 @@ struct QuizView: View {
                 // Question area
                 VStack(spacing: 18) {
                     ZStack {
-                        Text("\(session.currentQuestionIndex + 1)/\(session.level.questions.count)")
-                            .font(.system(size: 20, weight: .bold, design: .rounded))
-                            .foregroundStyle(AppTheme.textPrimary)
+                        VStack(spacing: 2) {
+                            Text("Level \(session.day)")
+                                .font(.system(size: 14, weight: .semibold, design: .rounded))
+                                .foregroundStyle(AppTheme.textPrimary.opacity(0.9))
+
+                            Text("\(session.currentQuestionIndex + 1)/\(session.level.questions.count)")
+                                .font(.system(size: 20, weight: .bold, design: .rounded))
+                                .foregroundStyle(AppTheme.textPrimary)
+
+                            Text(formattedElapsedTime)
+                                .font(.system(size: 14, weight: .medium, design: .rounded))
+                                .foregroundStyle(AppTheme.textPrimary.opacity(0.85))
+                        }
 
                         HStack {
                             Button(action: onBack) {
@@ -200,5 +211,12 @@ struct QuizView: View {
                 }
             }
         }
+    }
+
+    private var formattedElapsedTime: String {
+        let totalSeconds = max(Int(elapsedTime.rounded()), 0)
+        let minutes = totalSeconds / 60
+        let seconds = totalSeconds % 60
+        return String(format: "%d:%02d", minutes, seconds)
     }
 }

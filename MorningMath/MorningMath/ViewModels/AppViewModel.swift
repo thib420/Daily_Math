@@ -32,12 +32,14 @@ final class AppViewModel: ObservableObject {
 
     @Published private(set) var progress: ProgressState
     @Published private(set) var activeSession: QuizSession?
+    @Published private(set) var sessionElapsedTime: TimeInterval = 0
 
     private let store: ProgressStore
     private let accessPolicy: DailyAccessPolicy
     private let generator: QuestionGenerator
     private let nowProvider: () -> Date
     private let calendar: Calendar
+    private var timerCancellable: AnyCancellable?
 
     init(
         store: ProgressStore,
@@ -74,6 +76,10 @@ final class AppViewModel: ObservableObject {
         accessPolicy.nextDayToPlay(progress: progress)
     }
 
+    func savedTime(for day: Int) -> TimeInterval? {
+        progress.completedDayTimes[day]
+    }
+
     func status(for day: Int) -> DayStatus {
         if progress.completedDays.contains(day) {
             return .completed
@@ -99,6 +105,7 @@ final class AppViewModel: ObservableObject {
         let isReplay = progress.completedDays.contains(day)
         let restoredIndex = progress.inProgressDay == day ? progress.inProgressQuestionIndex : 0
         let startIndex = isReplay ? 0 : min(restoredIndex, max(questions.count - 1, 0))
+        let isNewTimerRun = isReplay || progress.inProgressDay != day
 
         activeSession = QuizSession(
             day: day,
@@ -108,20 +115,29 @@ final class AppViewModel: ObservableObject {
             feedback: nil
         )
 
-        if !isReplay {
-            progress.inProgressDay = day
-            progress.inProgressQuestionIndex = startIndex
-            store.save(progress)
+        progress.inProgressDay = day
+        progress.inProgressQuestionIndex = startIndex
+        if isNewTimerRun {
+            progress.inProgressElapsedTime = 0
         }
+        if progress.inProgressStartedAt == nil || isNewTimerRun {
+            progress.inProgressStartedAt = nowProvider()
+        }
+        store.save(progress)
+        refreshSessionElapsedTime()
+        startElapsedTimer()
     }
 
     func exitSession() {
-        if let session = activeSession, !progress.completedDays.contains(session.day) {
+        if let session = activeSession {
             progress.inProgressDay = session.day
             progress.inProgressQuestionIndex = session.currentQuestionIndex
+            pauseElapsedTimer(saveToStore: false)
             store.save(progress)
         }
         activeSession = nil
+        sessionElapsedTime = 0
+        stopElapsedTimer()
     }
 
     func appendDigit(_ digit: String) {
@@ -190,6 +206,7 @@ final class AppViewModel: ObservableObject {
             progress.inProgressDay = session.day
             progress.inProgressQuestionIndex = session.currentQuestionIndex
             store.save(progress)
+            refreshSessionElapsedTime()
             return
         }
 
@@ -206,13 +223,60 @@ final class AppViewModel: ObservableObject {
     }
 
     private func completeDay(day: Int) {
+        pauseElapsedTimer(saveToStore: false)
+        let elapsed = progress.inProgressDay == day ? progress.inProgressElapsedTime : 0
         progress.completedDays.insert(day)
+        progress.completedDayTimes[day] = elapsed
         progress.lastCompletionDayStart = calendar.startOfDay(for: nowProvider())
         if progress.inProgressDay == day {
             progress.inProgressDay = nil
             progress.inProgressQuestionIndex = 0
+            progress.inProgressElapsedTime = 0
+            progress.inProgressStartedAt = nil
         }
         store.save(progress)
         activeSession = nil
+        sessionElapsedTime = 0
+        stopElapsedTimer()
+    }
+
+    private func startElapsedTimer() {
+        stopElapsedTimer()
+        timerCancellable = Timer.publish(every: 0.2, on: .main, in: .common)
+            .autoconnect()
+            .sink { [weak self] _ in
+                self?.refreshSessionElapsedTime()
+            }
+    }
+
+    private func stopElapsedTimer() {
+        timerCancellable?.cancel()
+        timerCancellable = nil
+    }
+
+    private func pauseElapsedTimer(saveToStore: Bool) {
+        guard let inProgressDay = progress.inProgressDay,
+              activeSession?.day == inProgressDay else {
+            return
+        }
+
+        if let startedAt = progress.inProgressStartedAt {
+            progress.inProgressElapsedTime += max(0, nowProvider().timeIntervalSince(startedAt))
+            progress.inProgressStartedAt = nil
+        }
+
+        if saveToStore {
+            store.save(progress)
+        }
+    }
+
+    private func refreshSessionElapsedTime() {
+        guard let session = activeSession, progress.inProgressDay == session.day else {
+            sessionElapsedTime = 0
+            return
+        }
+
+        let running = progress.inProgressStartedAt.map { max(0, nowProvider().timeIntervalSince($0)) } ?? 0
+        sessionElapsedTime = progress.inProgressElapsedTime + running
     }
 }

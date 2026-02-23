@@ -2,6 +2,7 @@ import SwiftUI
 
 struct DayGridView: View {
     let statusForDay: (Int) -> AppViewModel.DayStatus
+    let savedTimeForDay: (Int) -> TimeInterval?
     let onSelectDay: (Int) -> Void
 
     private let columns = [
@@ -37,13 +38,19 @@ struct DayGridView: View {
         Button {
             onSelectDay(day)
         } label: {
-            Text("\(day)")
-                .font(.system(size: 34, weight: .semibold, design: .rounded))
-                .foregroundStyle(AppTheme.textPrimary)
-                .frame(maxWidth: .infinity)
-                .frame(height: 120)
-                .background(tileColor(for: status))
-                .clipShape(RoundedRectangle(cornerRadius: 24, style: .continuous))
+            VStack(spacing: 6) {
+                Text("\(day)")
+                    .font(.system(size: 34, weight: .semibold, design: .rounded))
+                    .foregroundStyle(AppTheme.textPrimary)
+
+                Text(tileSubtitle(for: day, status: status))
+                    .font(.system(size: 13, weight: .medium, design: .rounded))
+                    .foregroundStyle(AppTheme.textPrimary.opacity(0.9))
+            }
+            .frame(maxWidth: .infinity)
+            .frame(height: 120)
+            .background(tileColor(for: status))
+            .clipShape(RoundedRectangle(cornerRadius: 24, style: .continuous))
         }
         .buttonStyle(.plain)
         .disabled(status == .locked)
@@ -58,5 +65,20 @@ struct DayGridView: View {
         case .locked:
             return AppTheme.panelLight
         }
+    }
+
+    private func tileSubtitle(for day: Int, status: AppViewModel.DayStatus) -> String {
+        if status == .completed {
+            guard let elapsed = savedTimeForDay(day) else {
+                return ""
+            }
+
+            let totalSeconds = max(Int(elapsed.rounded()), 0)
+            let minutes = totalSeconds / 60
+            let seconds = totalSeconds % 60
+            return "\(minutes):\(String(format: "%02d", seconds))"
+        }
+
+        return status == .locked ? "Locked" : "Play"
     }
 }
