@@ -4,9 +4,7 @@ struct ContentView: View {
     @StateObject private var viewModel = AppViewModel()
 
     var body: some View {
-        ZStack {
-            AppTheme.background.ignoresSafeArea()
-
+        Group {
             if viewModel.showCompletionScreen {
                 CompletionView(onReset: viewModel.resetProgress)
             } else if let session = viewModel.activeSession {
@@ -26,5 +24,7 @@ struct ContentView: View {
                 )
             }
         }
+        .frame(maxWidth: .infinity, maxHeight: .infinity)
+        .background(AppTheme.background.ignoresSafeArea())
     }
 }
