@@ -1,5 +1,6 @@
 import Foundation
 import Combine
+import UserNotifications
 
 @MainActor
 final class AppViewModel: ObservableObject {
@@ -40,6 +41,9 @@ final class AppViewModel: ObservableObject {
     private let nowProvider: () -> Date
     private let calendar: Calendar
     private var timerCancellable: AnyCancellable?
+    private var didAttemptNotificationSetup = false
+
+    private static let dailyReminderNotificationID = "morningmath.daily.new-level"
 
     init(
         store: ProgressStore,
@@ -74,6 +78,31 @@ final class AppViewModel: ObservableObject {
 
     var nextDayToPlay: Int? {
         accessPolicy.nextDayToPlay(progress: progress)
+    }
+
+    func configureDailyReminderNotification() async {
+        guard !didAttemptNotificationSetup else {
+            return
+        }
+        didAttemptNotificationSetup = true
+
+        let center = UNUserNotificationCenter.current()
+        let settings = await notificationSettings(from: center)
+
+        switch settings.authorizationStatus {
+        case .notDetermined:
+            guard await requestNotificationAuthorization(from: center) else {
+                return
+            }
+        case .authorized, .provisional, .ephemeral:
+            break
+        case .denied:
+            return
+        @unknown default:
+            return
+        }
+
+        await scheduleDailyReminder(from: center)
     }
 
     func savedTime(for day: Int) -> TimeInterval? {
@@ -278,5 +307,47 @@ final class AppViewModel: ObservableObject {
 
         let running = progress.inProgressStartedAt.map { max(0, nowProvider().timeIntervalSince($0)) } ?? 0
         sessionElapsedTime = progress.inProgressElapsedTime + running
+    }
+
+    private func notificationSettings(from center: UNUserNotificationCenter) async -> UNNotificationSettings {
+        await withCheckedContinuation { continuation in
+            center.getNotificationSettings { settings in
+                continuation.resume(returning: settings)
+            }
+        }
+    }
+
+    private func requestNotificationAuthorization(from center: UNUserNotificationCenter) async -> Bool {
+        await withCheckedContinuation { continuation in
+            center.requestAuthorization(options: [.alert, .sound]) { granted, _ in
+                continuation.resume(returning: granted)
+            }
+        }
+    }
+
+    private func scheduleDailyReminder(from center: UNUserNotificationCenter) async {
+        await withCheckedContinuation { continuation in
+            center.removePendingNotificationRequests(withIdentifiers: [Self.dailyReminderNotificationID])
+
+            let content = UNMutableNotificationContent()
+            content.title = "New level unlocked"
+            content.body = "Solve today's MorningMath challenge."
+            content.sound = .default
+
+            var dateComponents = DateComponents()
+            dateComponents.hour = 10
+            dateComponents.minute = 0
+
+            let trigger = UNCalendarNotificationTrigger(dateMatching: dateComponents, repeats: true)
+            let request = UNNotificationRequest(
+                identifier: Self.dailyReminderNotificationID,
+                content: content,
+                trigger: trigger
+            )
+
+            center.add(request) { _ in
+                continuation.resume()
+            }
+        }
     }
 }

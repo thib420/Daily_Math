@@ -25,5 +25,8 @@ struct ContentView: View {
         }
         .frame(maxWidth: .infinity, maxHeight: .infinity)
         .background(AppTheme.background.ignoresSafeArea())
+        .task {
+            await viewModel.configureDailyReminderNotification()
+        }
     }
 }
