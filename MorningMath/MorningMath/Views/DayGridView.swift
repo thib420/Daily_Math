@@ -12,7 +12,7 @@ struct DayGridView: View {
     ]
 
     var body: some View {
-        ScrollView {
+        ScrollView(.vertical, showsIndicators: true) {
             VStack(alignment: .leading, spacing: 18) {
                 Text("Math Daily")
                     .font(.system(size: 40, weight: .bold, design: .rounded))
@@ -36,6 +36,9 @@ struct DayGridView: View {
 
     private func dayTile(day: Int, status: AppViewModel.DayStatus) -> some View {
         Button {
+            guard status != .locked else {
+                return
+            }
             onSelectDay(day)
         } label: {
             VStack(spacing: 6) {
@@ -53,7 +56,6 @@ struct DayGridView: View {
             .clipShape(RoundedRectangle(cornerRadius: 24, style: .continuous))
         }
         .buttonStyle(.plain)
-        .disabled(status == .locked)
     }
 
     private func tileColor(for status: AppViewModel.DayStatus) -> Color {

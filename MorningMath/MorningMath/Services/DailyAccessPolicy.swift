@@ -1,7 +1,7 @@
 import Foundation
 
 struct DailyAccessPolicy {
-    static let totalDays = 7
+    static let totalDays = 25
 
     init() {}
 

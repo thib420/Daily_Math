@@ -11,11 +11,11 @@ struct CompletionView: View {
                 .font(.system(size: 42, weight: .bold, design: .rounded))
                 .foregroundStyle(AppTheme.panelDark)
 
-            Text("7 days completed")
+            Text("\(DailyAccessPolicy.totalDays) days completed")
                 .font(.system(size: 28, weight: .semibold, design: .rounded))
                 .foregroundStyle(AppTheme.panelDark)
 
-            Text("Great consistency. You can now reset and start a new 7-day cycle.")
+            Text("Great consistency. You can now reset and start a new \(DailyAccessPolicy.totalDays)-day cycle.")
                 .multilineTextAlignment(.center)
                 .font(.system(size: 18, weight: .medium, design: .rounded))
                 .foregroundStyle(AppTheme.panelDark.opacity(0.8))
