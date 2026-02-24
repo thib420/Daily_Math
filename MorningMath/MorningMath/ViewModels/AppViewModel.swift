@@ -15,6 +15,12 @@ final class AppViewModel: ObservableObject {
         let isError: Bool
     }
 
+    struct LevelCompletionSummary: Equatable {
+        let day: Int
+        let stars: Int
+        let nextDay: Int?
+    }
+
     struct QuizSession: Equatable {
         let day: Int
         let level: DailyLevel
@@ -34,6 +40,7 @@ final class AppViewModel: ObservableObject {
     @Published private(set) var progress: ProgressState
     @Published private(set) var activeSession: QuizSession?
     @Published private(set) var sessionElapsedTime: TimeInterval = 0
+    @Published private(set) var levelCompletionSummary: LevelCompletionSummary?
 
     private let store: ProgressStore
     private let accessPolicy: DailyAccessPolicy
@@ -109,6 +116,10 @@ final class AppViewModel: ObservableObject {
         progress.completedDayTimes[day]
     }
 
+    func starRating(for day: Int) -> Int? {
+        progress.completedDayTimes[day].map(starRating(forElapsed:))
+    }
+
     func status(for day: Int) -> DayStatus {
         if progress.completedDays.contains(day) {
             return .completed
@@ -129,6 +140,7 @@ final class AppViewModel: ObservableObject {
         guard accessPolicy.canStart(day: day, progress: progress) else {
             return
         }
+        levelCompletionSummary = nil
 
         let questions = generator.questions(for: day, anchorDate: progress.startedAt)
         let isReplay = progress.completedDays.contains(day)
@@ -248,7 +260,21 @@ final class AppViewModel: ObservableObject {
         let fresh = ProgressState(startedAt: calendar.startOfDay(for: nowProvider()))
         progress = fresh
         activeSession = nil
+        levelCompletionSummary = nil
         store.save(fresh)
+    }
+
+    func dismissLevelCompletionSummary() {
+        levelCompletionSummary = nil
+    }
+
+    func continueToNextLevelFromSummary() {
+        let nextDay = levelCompletionSummary?.nextDay
+        levelCompletionSummary = nil
+        guard let day = nextDay else {
+            return
+        }
+        startDay(day)
     }
 
     private func completeDay(day: Int) {
@@ -257,6 +283,11 @@ final class AppViewModel: ObservableObject {
         progress.completedDays.insert(day)
         progress.completedDayTimes[day] = elapsed
         progress.lastCompletionDayStart = calendar.startOfDay(for: nowProvider())
+        levelCompletionSummary = LevelCompletionSummary(
+            day: day,
+            stars: starRating(forElapsed: elapsed),
+            nextDay: accessPolicy.nextDayToPlay(progress: progress)
+        )
         if progress.inProgressDay == day {
             progress.inProgressDay = nil
             progress.inProgressQuestionIndex = 0
@@ -307,6 +338,20 @@ final class AppViewModel: ObservableObject {
 
         let running = progress.inProgressStartedAt.map { max(0, nowProvider().timeIntervalSince($0)) } ?? 0
         sessionElapsedTime = progress.inProgressElapsedTime + running
+    }
+
+    private func starRating(forElapsed elapsed: TimeInterval) -> Int {
+        let safeElapsed = max(elapsed, 0)
+
+        if safeElapsed < 30 {
+            return 3
+        }
+
+        if safeElapsed <= 40 {
+            return 2
+        }
+
+        return 1
     }
 
     private func notificationSettings(from center: UNUserNotificationCenter) async -> UNNotificationSettings {

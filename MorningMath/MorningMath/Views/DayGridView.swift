@@ -2,7 +2,7 @@ import SwiftUI
 
 struct DayGridView: View {
     let statusForDay: (Int) -> AppViewModel.DayStatus
-    let savedTimeForDay: (Int) -> TimeInterval?
+    let starRatingForDay: (Int) -> Int?
     let onSelectDay: (Int) -> Void
 
     private let columns = [
@@ -46,9 +46,7 @@ struct DayGridView: View {
                     .font(.system(size: 34, weight: .semibold, design: .rounded))
                     .foregroundStyle(AppTheme.textPrimary)
 
-                Text(tileSubtitle(for: day, status: status))
-                    .font(.system(size: 13, weight: .medium, design: .rounded))
-                    .foregroundStyle(AppTheme.textPrimary.opacity(0.9))
+                tileStatusView(for: day, status: status)
             }
             .frame(maxWidth: .infinity)
             .frame(height: 120)
@@ -69,18 +67,21 @@ struct DayGridView: View {
         }
     }
 
-    private func tileSubtitle(for day: Int, status: AppViewModel.DayStatus) -> String {
+    @ViewBuilder
+    private func tileStatusView(for day: Int, status: AppViewModel.DayStatus) -> some View {
         if status == .completed {
-            guard let elapsed = savedTimeForDay(day) else {
-                return ""
+            let stars = min(max(starRatingForDay(day) ?? 1, 1), 3)
+            HStack(spacing: 4) {
+                ForEach(1...3, id: \.self) { index in
+                    Image(systemName: index <= stars ? "star.fill" : "star")
+                        .font(.system(size: 14, weight: .semibold))
+                        .foregroundStyle(index <= stars ? AppTheme.warning : AppTheme.textPrimary.opacity(0.55))
+                }
             }
-
-            let totalSeconds = max(Int(elapsed.rounded()), 0)
-            let minutes = totalSeconds / 60
-            let seconds = totalSeconds % 60
-            return "\(minutes):\(String(format: "%02d", seconds))"
+        } else {
+            Text(status == .locked ? "Locked" : "Play")
+                .font(.system(size: 13, weight: .medium, design: .rounded))
+                .foregroundStyle(AppTheme.textPrimary.opacity(0.9))
         }
-
-        return status == .locked ? "Locked" : "Play"
     }
 }
