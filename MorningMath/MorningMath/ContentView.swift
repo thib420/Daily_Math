@@ -28,7 +28,8 @@ struct ContentView: View {
             if let summary = viewModel.levelCompletionSummary, viewModel.activeSession == nil {
                 LevelCompletionPopupView(
                     summary: summary,
-                    onContinue: viewModel.continueToNextLevelFromSummary
+                    onContinue: viewModel.continueToNextLevelFromSummary,
+                    onDismiss: viewModel.dismissLevelCompletionSummary
                 )
                 .transition(.opacity)
             }
@@ -45,6 +46,7 @@ struct ContentView: View {
 private struct LevelCompletionPopupView: View {
     let summary: AppViewModel.LevelCompletionSummary
     let onContinue: () -> Void
+    let onDismiss: () -> Void
 
     var body: some View {
         ZStack {
@@ -83,6 +85,18 @@ private struct LevelCompletionPopupView: View {
                 RoundedRectangle(cornerRadius: 24, style: .continuous)
                     .stroke(AppTheme.textPrimary.opacity(0.15), lineWidth: 1)
             )
+            .overlay(alignment: .topTrailing) {
+                Button(action: onDismiss) {
+                    Image(systemName: "xmark")
+                        .font(.system(size: 14, weight: .bold))
+                        .foregroundStyle(AppTheme.textPrimary.opacity(0.8))
+                        .frame(width: 30, height: 30)
+                        .background(AppTheme.panel.opacity(0.9))
+                        .clipShape(Circle())
+                }
+                .buttonStyle(.plain)
+                .padding(12)
+            }
             .padding(.horizontal, 24)
         }
     }
